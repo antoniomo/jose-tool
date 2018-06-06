@@ -2,7 +2,8 @@
 
 ## JWT
 
-- JWT Sign/Verify from JWKs with kid
+- Sign/Verify from JWKs with kid
+- On verify, show warnings if expired/not before aren't met
 
 ## JWS
 
@@ -10,7 +11,7 @@
 
 ## JWK
 
-- JWK Support other alg/kty
+- Support other alg/kty
 - Add set handling: list kids/ get/add/remove by kid...
 
 ## JWE
