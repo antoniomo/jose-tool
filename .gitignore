@@ -1,0 +1,8 @@
+# Test files
+*.pem
+*.tok
+*.json
+# Binary from build
+jose-tool
+# vendor folder
+vendor/
