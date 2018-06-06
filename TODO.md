@@ -12,7 +12,7 @@
 ## JWK
 
 - Support other alg/kty
-- Add set handling: list kids/ get/add/remove by kid...
+- Add set handling: list kids, get/add/remove by kid...
 
 ## JWE
 
