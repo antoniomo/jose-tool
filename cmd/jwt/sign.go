@@ -11,15 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type signOptions struct {
-	output    string
-	algorithm string
-	key       string
-	claims    string
-}
-
-var so signOptions
-
 // Sign ...
 var sign = &cobra.Command{
 	Use:   "sign [options]",
@@ -28,28 +19,28 @@ var sign = &cobra.Command{
 }
 
 func signRun(cmd *cobra.Command, args []string) {
-	if so.key == "" {
+	if opt.key == "" {
 		fmt.Println("error: expecting a key filename or string")
 		cmd.Help()
 		os.Exit(1)
 	}
 
 	// Normalize
-	so.algorithm = strings.ToUpper(so.algorithm)
+	opt.algorithm = strings.ToUpper(opt.algorithm)
 
 	var a jwa.SignatureAlgorithm
-	err := a.Accept(so.algorithm)
+	err := a.Accept(opt.algorithm)
 	util.ExitOnError("wrong signature algorithm", err)
 
 	var priv interface{}
-	if strings.HasPrefix(so.algorithm, "HS") {
-		priv = []byte(so.key)
+	if strings.HasPrefix(opt.algorithm, "HS") {
+		priv = []byte(opt.key)
 	} else {
 		// If it's not HMAC type of key, grab from file
-		k := util.ReadInput(so.key)
+		k := util.ReadInput(opt.key)
 		priv = util.LoadPrivateKey(k)
 	}
-	cl := util.ReadInput(so.claims)
+	cl := util.ReadInput(opt.claims)
 	tok := sjwt.New()
 	err = tok.UnmarshalJSON(cl)
 	util.ExitOnError("unable to parse claims", err)
@@ -57,14 +48,14 @@ func signRun(cmd *cobra.Command, args []string) {
 	payload, err := tok.Sign(a, priv)
 	util.ExitOnError("signing failure", err)
 
-	util.WriteOutput(so.output, payload)
+	util.WriteOutput(opt.output, payload)
 }
 
 func init() {
-	sign.Flags().StringVarP(&so.output, "output", "o", "", "output file")
-	sign.Flags().StringVarP(&so.algorithm, "alg", "a", "RS256", "signature algorithm")
-	sign.Flags().StringVarP(&so.key, "key", "k", "", "private key (filename or string for HSXXX alg)")
-	sign.Flags().StringVarP(&so.claims, "claims", "c", "", "claims json file")
+	sign.Flags().StringVarP(&opt.output, "output", "o", "", "output file")
+	sign.Flags().StringVarP(&opt.algorithm, "alg", "a", "RS256", "signature algorithm")
+	sign.Flags().StringVarP(&opt.key, "key", "k", "", "private key (filename or string for HSXXX alg)")
+	sign.Flags().StringVarP(&opt.claims, "claims", "c", "", "claims json file")
 
 	JWT.AddCommand(sign)
 }

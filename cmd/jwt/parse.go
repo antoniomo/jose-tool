@@ -9,14 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type parseOptions struct {
-	input      string
-	output     string
-	toDateTime bool
-}
-
-var po parseOptions
-
 // Parse ...
 var parse = &cobra.Command{
 	Use:   "parse [options]",
@@ -27,14 +19,14 @@ var parse = &cobra.Command{
 
 func parseRun(cmd *cobra.Command, args []string) {
 
-	raw := util.ReadInput(po.input)
+	raw := util.ReadInput(opt.input)
 
 	tok, err := sjwt.ParseBytes(raw)
 	util.ExitOnError("unable to parse", err)
 
-	util.WriteAsJSON(po.output, tok)
+	util.WriteAsJSON(opt.output, tok)
 
-	if po.toDateTime {
+	if opt.toDateTime {
 		fmt.Println("\n----")
 		if !tok.NotBefore().IsZero() {
 			fmt.Println("nbf -> ", tok.NotBefore().Format(time.RFC3339))
@@ -49,9 +41,9 @@ func parseRun(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	parse.Flags().StringVarP(&po.input, "input", "i", "", "input file")
-	parse.Flags().StringVarP(&po.output, "output", "o", "", "output file")
-	parse.Flags().BoolVarP(&po.toDateTime, "todt", "t", false, "convert nbf/iat/exp to RFC3339 formats (on STDOUT)")
+	parse.Flags().StringVarP(&opt.input, "input", "i", "", "input file")
+	parse.Flags().StringVarP(&opt.output, "output", "o", "", "output file")
+	parse.Flags().BoolVarP(&opt.toDateTime, "todt", "t", false, "convert nbf/iat/exp to RFC3339 formats (on STDOUT)")
 
 	JWT.AddCommand(parse)
 }

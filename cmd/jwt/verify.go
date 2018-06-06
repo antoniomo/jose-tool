@@ -12,16 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type verifyOptions struct {
-	input      string
-	output     string
-	algorithm  string
-	key        string
-	toDateTime bool
-}
-
-var vo verifyOptions
-
 // Verify ...
 var verify = &cobra.Command{
 	Use:   "verify [options]",
@@ -31,27 +21,27 @@ var verify = &cobra.Command{
 }
 
 func verifyRun(cmd *cobra.Command, args []string) {
-	if vo.key == "" {
+	if opt.key == "" {
 		fmt.Println("error: expecting a key filename or string")
 		cmd.Help()
 		os.Exit(1)
 	}
 
 	// Normalize
-	so.algorithm = strings.ToUpper(so.algorithm)
+	opt.algorithm = strings.ToUpper(opt.algorithm)
 
-	raw := util.ReadInput(vo.input)
+	raw := util.ReadInput(opt.input)
 
 	var a jwa.SignatureAlgorithm
-	err := a.Accept(vo.algorithm)
+	err := a.Accept(opt.algorithm)
 	util.ExitOnError("wrong signature algorithm", err)
 
 	var priv interface{}
-	if strings.HasPrefix(vo.algorithm, "HS") {
-		priv = []byte(vo.key)
+	if strings.HasPrefix(opt.algorithm, "HS") {
+		priv = []byte(opt.key)
 	} else {
 		// If it's not HMAC type of key, grab from file
-		k := util.ReadInput(vo.key)
+		k := util.ReadInput(opt.key)
 		priv = util.LoadPublicKey(k)
 	}
 	options := sjwt.WithVerify(a, priv)
@@ -64,9 +54,9 @@ func verifyRun(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Println("signature OK")
 	}
-	util.WriteAsJSON(vo.output, tok)
+	util.WriteAsJSON(opt.output, tok)
 
-	if vo.toDateTime {
+	if opt.toDateTime {
 		fmt.Println("\n----")
 		if !tok.NotBefore().IsZero() {
 			fmt.Println("nbf -> ", tok.NotBefore().Format(time.RFC3339))
@@ -81,11 +71,11 @@ func verifyRun(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	verify.Flags().StringVarP(&vo.input, "input", "i", "", "input file")
-	verify.Flags().StringVarP(&vo.output, "output", "o", "", "output file")
-	verify.Flags().StringVarP(&vo.algorithm, "alg", "a", "RS256", "signature algorithm")
-	verify.Flags().StringVarP(&vo.key, "key", "k", "", "public key (filename or string for HSXXX alg)")
-	verify.Flags().BoolVarP(&vo.toDateTime, "todt", "t", true, "convert nbf/iat/exp to RFC3339 formats")
+	verify.Flags().StringVarP(&opt.input, "input", "i", "", "input file")
+	verify.Flags().StringVarP(&opt.output, "output", "o", "", "output file")
+	verify.Flags().StringVarP(&opt.algorithm, "alg", "a", "RS256", "signature algorithm")
+	verify.Flags().StringVarP(&opt.key, "key", "k", "", "public key (filename or string for HSXXX alg)")
+	verify.Flags().BoolVarP(&opt.toDateTime, "todt", "t", true, "convert nbf/iat/exp to RFC3339 formats")
 
 	JWT.AddCommand(verify)
 }
