@@ -43,7 +43,7 @@ func parseRun(cmd *cobra.Command, args []string) {
 func init() {
 	parse.Flags().StringVarP(&opt.input, "input", "i", "", "input file")
 	parse.Flags().StringVarP(&opt.output, "output", "o", "", "output file")
-	parse.Flags().BoolVarP(&opt.toDateTime, "todt", "t", false, "convert nbf/iat/exp to RFC3339 formats (on STDOUT)")
+	parse.Flags().BoolVarP(&opt.toDateTime, "todt", "t", true, "convert nbf/iat/exp to RFC3339 formats (on STDOUT)")
 
 	JWT.AddCommand(parse)
 }
