@@ -6,10 +6,11 @@ import (
 
 type jwtOptions struct {
 	input      string
-	output    string
-	algorithm string
-	key       string
-	claims    string
+	output     string
+	algorithm  string
+	key        string
+	kid        string
+	claims     string
 	toDateTime bool
 }
 

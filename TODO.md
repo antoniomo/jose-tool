@@ -2,8 +2,8 @@
 
 ## JWT
 
-- Sign/Verify from JWKs with kid
 - On verify, show warnings if expired/not before aren't met
+- Add JWK sign/verify from URL
 
 ## JWS
 
