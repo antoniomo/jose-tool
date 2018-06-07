@@ -2,6 +2,7 @@
 *.pem
 *.tok
 *.json
+*.jwks
 # Binary from build
 jose-tool
 # vendor folder
