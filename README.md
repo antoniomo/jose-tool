@@ -7,12 +7,20 @@ awesome `https://github.com/lestrrat-go` and taking a lot of inspiration and
 code from `https://github.com/square/go-jose/tree/v2/jose-util` as well, but if
 there's issues or suggestions I can add functionality or polish the interface.
 
-## A disclaimer
+## Installation
 
-Googling a bit, I found that the name of a similar tool already exists in the
-node world:
+```
+go get -d github.com/antoniomo/jose-tool
+cd $GOPATH/src/github.com/antoniomo/jose-tool
+dep ensure -vendor-only
+go install
+```
 
+## Other similar tools
+
+Some tools that influenced this one are:
+
+- https://github.com/square/go-jose/tree/v2/jose-util
 - https://github.com/phish108/node-jose-tools
 
-Even though this one has nothing to do with that one, given that the scope is
-similar please contact me if you want me to change the name.
+The second one has a similar name to this one, I hope that's not a problem.
