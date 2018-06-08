@@ -1,11 +1,13 @@
 # JWT tool
 
-Command line tool to manage your JWT, JWK and JWK sets.
+Command line tool to manage your JOSE related stuff (JWT, JWS, JWE, and JWK
+sets).
 
 I did it simply to fulfill my needs on a quick and dirty way, on top of the
 awesome `https://github.com/lestrrat-go` and taking a lot of inspiration and
 code from `https://github.com/square/go-jose/tree/v2/jose-util` as well, but if
-there's issues or suggestions I can add functionality or polish the interface.
+there's issues or suggestions I can add functionality or polish the interface
+(also check the TODO.md file).
 
 ## Installation
 

@@ -1,5 +1,9 @@
 # TODO
 
+- Perhaps remove "family" verbs and use a single-level command structure?
+- Examples in README
+- Better help
+
 ## JWT
 
 - On verify, show warnings if expired/not before aren't met
