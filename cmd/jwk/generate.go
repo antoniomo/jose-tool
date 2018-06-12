@@ -28,8 +28,6 @@ func generateRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Println(opt.kids)
-
 	// Normalize
 	opt.kty = strings.ToUpper(opt.kty)
 	opt.signing = strings.ToUpper(opt.signing)
