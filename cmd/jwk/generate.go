@@ -40,8 +40,8 @@ func generateRun(cmd *cobra.Command, args []string) {
 	if opt.kidFormat == "date:sequence" {
 		dateSep = time.Now().UTC().Format("2006-01-02") + ":"
 	} else if opt.kidFormat == "provided" {
-		if len(opt.kidFormat) != opt.n {
-			fmt.Println("error: -n must be == len(--kids)")
+		if len(opt.kids) != opt.n {
+			fmt.Printf("error: -n(%d) must be == len(--kids)(%d)", opt.n, len(opt.kids))
 			os.Exit(1)
 		}
 	}
