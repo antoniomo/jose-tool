@@ -11,6 +11,7 @@ type jwkOptions struct {
 	kidFormat     string
 	publicOutput  string
 	privateOutput string
+	kids          []string
 }
 
 var opt jwkOptions
