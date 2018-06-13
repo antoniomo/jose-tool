@@ -71,10 +71,11 @@ func loadFirebasePublicKeys(data []byte) (interface{}, error) {
 	}
 	for kid, key := range keys {
 		// Try PEM/DER file
-		input, ok := key.([]byte)
+		inputs, ok := key.(string)
 		if !ok {
 			return nil, errors.New("not a 'firebase style' key dict")
 		}
+		input := []byte(inputs)
 
 		block, _ := pem.Decode(input)
 		if block != nil {
