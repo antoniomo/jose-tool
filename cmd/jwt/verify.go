@@ -38,21 +38,20 @@ func verifyRun(cmd *cobra.Command, args []string) {
 	util.ExitOnError("wrong signature algorithm", err)
 
 	var (
-		priv  interface{}
-		isSet bool
+		publicKey interface{}
 	)
 	if strings.HasPrefix(opt.algorithm, "HS") {
-		priv = []byte(opt.key)
+		publicKey = []byte(opt.key)
 	} else {
 		// If it's not HMAC type of key, grab from file
 		k := util.ReadInput(opt.key)
-		priv, isSet = util.LoadPublicKey(k)
+		publicKey = util.LoadPublicKey(k)
 	}
 	// JWKs handling
-	if isSet {
-		set := priv.(*sjwk.Set)
+	switch v := publicKey.(type) {
+	case *sjwk.Set:
 		if opt.kid != "" {
-			keys := set.LookupKeyID(opt.kid)
+			keys := v.LookupKeyID(opt.kid)
 			if len(keys) == 0 {
 				fmt.Printf("kid %q not found\n", opt.kid)
 				os.Exit(1)
@@ -61,13 +60,21 @@ func verifyRun(cmd *cobra.Command, args []string) {
 				fmt.Printf("warning: found %d keys with kid: %q, using the first one",
 					len(keys), opt.kid)
 			}
-			priv, _ = keys[0].Materialize()
+			publicKey, _ = keys[0].Materialize()
 		} else {
 			fmt.Printf("warning: using jwk without kid, using the first one\n")
-			priv, _ = set.Keys[0].Materialize()
+			publicKey, _ = v.Keys[0].Materialize()
+		}
+	case map[string]interface{}:
+		if opt.kid != "" {
+			publicKey = v[opt.kid]
+		} else {
+			fmt.Printf("--kid required\n")
+			os.Exit(1)
 		}
 	}
-	options := sjwt.WithVerify(a, priv)
+
+	options := sjwt.WithVerify(a, publicKey)
 
 	tok, err := sjwt.ParseBytes(raw, options)
 	if err != nil {

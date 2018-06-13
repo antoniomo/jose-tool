@@ -7,6 +7,7 @@
 ## JWT
 
 - On verify, show warnings if expired/not before aren't met
+- No need to specify --kid if the claims have one
 - Add JWK sign/verify from URL
 
 ## JWS

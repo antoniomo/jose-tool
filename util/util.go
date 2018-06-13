@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -63,14 +64,56 @@ func WriteAsJSON(path string, object interface{}) {
 	WriteOutput(path, jsonbuf)
 }
 
+func loadFirebasePublicKeys(data []byte) (interface{}, error) {
+	keys := make(map[string]interface{})
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return nil, errors.New("not a 'firebase style' key dict")
+	}
+	for kid, key := range keys {
+		// Try PEM/DER file
+		input, ok := key.([]byte)
+		if !ok {
+			return nil, errors.New("not a 'firebase style' key dict")
+		}
+
+		block, _ := pem.Decode(input)
+		if block != nil {
+			input = block.Bytes
+		}
+
+		// Try to load SubjectPublicKeyInfo
+		pub, err := x509.ParsePKIXPublicKey(input)
+		if err == nil {
+			keys[kid] = pub
+			continue
+		}
+
+		cert, err := x509.ParseCertificate(input)
+		if err == nil {
+			keys[kid] = cert.PublicKey
+			continue
+		}
+		return nil, errors.New("not a 'firebase style' key dict")
+	}
+
+	return keys, nil
+}
+
 // LoadPublicKey loads a public key from JWKs or PEM/DER data.
-func LoadPublicKey(data []byte) (interface{}, bool) {
+func LoadPublicKey(data []byte) interface{} {
 	input := data
 
 	// Is it a jwk?
 	set, err0 := sjwk.Parse(input)
 	if err0 == nil {
-		return set, true
+		return set
+	}
+
+	// Is it a weird "PEM/DER inside a JSON map" kinda thing? (Format used
+	// by, for example, Firebase public keys)
+	keys, err1 := loadFirebasePublicKeys(input)
+	if err1 == nil {
+		return keys
 	}
 
 	// Try PEM/DER file
@@ -80,18 +123,18 @@ func LoadPublicKey(data []byte) (interface{}, bool) {
 	}
 
 	// Try to load SubjectPublicKeyInfo
-	pub, err1 := x509.ParsePKIXPublicKey(input)
-	if err1 == nil {
-		return pub, false
-	}
-
-	cert, err2 := x509.ParseCertificate(input)
+	pub, err2 := x509.ParsePKIXPublicKey(input)
 	if err2 == nil {
-		return cert.PublicKey, false
+		return pub
 	}
 
-	ExitOnError("failed to parse public key", err0, err1, err2)
-	return nil, false
+	cert, err3 := x509.ParseCertificate(input)
+	if err3 == nil {
+		return cert.PublicKey
+	}
+
+	ExitOnError("failed to parse public key", err0, err1, err2, err3)
+	return nil
 }
 
 // LoadPrivateKey loads a private key from JWKs or PEM/DER data.
