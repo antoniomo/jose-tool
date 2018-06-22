@@ -6,8 +6,8 @@ import (
 
 type jwkOptions struct {
 	n             int
-	kty           string
-	signing       string
+	keyLength     int
+	algorithm     string
 	kidFormat     string
 	publicOutput  string
 	privateOutput string

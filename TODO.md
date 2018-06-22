@@ -16,8 +16,7 @@
 
 ## JWK
 
-- Support other alg/kty
-- Deduce kty from alg
+- Support HS alg
 - Add set handling: list kids, get/add/remove by kid...
 
 ## JWE

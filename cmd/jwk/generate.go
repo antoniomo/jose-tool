@@ -1,6 +1,8 @@
 package jwk
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
@@ -29,13 +31,16 @@ func generateRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Normalize
-	opt.kty = strings.ToUpper(opt.kty)
-	opt.signing = strings.ToUpper(opt.signing)
+	opt.algorithm = strings.ToUpper(opt.algorithm)
 
 	var (
 		privateSet sjwk.Set
 		publicSet  sjwk.Set
 		dateSep    string
+		kid        string
+		kty        string
+		key        interface{}
+		publickey  interface{}
 	)
 	if opt.kidFormat == "date:sequence" {
 		dateSep = time.Now().UTC().Format("2006-01-02") + ":"
@@ -46,48 +51,63 @@ func generateRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	switch opt.kty {
-	case "RSA":
-		var (
-			kid string
-		)
-		for i := 0; i < opt.n; i++ {
-			rsakey, err := rsa.GenerateKey(rand.Reader, 2048)
-			util.ExitOnError("failed generate private key", err)
-
-			if opt.kidFormat == "date:sequence" {
-				kid = dateSep + strconv.Itoa(i)
-			} else if opt.kidFormat == "provided" {
-				kid = opt.kids[i]
+	for i := 0; i < opt.n; i++ {
+		switch opt.algorithm {
+		case "RS256", "RS384", "RS512", "PS256", "PS384", "PS512":
+			kty = "RSA"
+			_key, err := rsa.GenerateKey(rand.Reader, opt.keyLength)
+			key = _key
+			publickey = &_key.PublicKey
+			util.ExitOnError("failed to generate private key", err)
+		case "ES256", "ES384", "ES512":
+			var c elliptic.Curve
+			switch opt.algorithm {
+			case "ES256":
+				c = elliptic.P256()
+			case "ES384":
+				c = elliptic.P384()
+			case "ES512":
+				c = elliptic.P521()
 			}
-			privateKey, err := sjwk.New(rsakey)
-			util.ExitOnError("failed to create JWK", err)
-
-			if opt.signing != "" {
-				privateKey.Set("use", "sig")
-				privateKey.Set("alg", opt.signing)
-			}
-			if opt.kidFormat != "" {
-				privateKey.Set("kid", kid)
-			}
-			privateKey.Set("kid", kid)
-			privateSet.Keys = append(privateSet.Keys, privateKey)
-
-			publicKey, err := sjwk.New(&rsakey.PublicKey)
-			util.ExitOnError("failed to create JWK", err)
-
-			if opt.signing != "" {
-				publicKey.Set("use", "sig")
-				publicKey.Set("alg", opt.signing)
-			}
-			if opt.kidFormat != "" {
-				publicKey.Set("kid", kid)
-			}
-			publicSet.Keys = append(publicSet.Keys, publicKey)
+			kty = "EC"
+			_key, err := ecdsa.GenerateKey(c, rand.Reader)
+			key = _key
+			publickey = &_key.PublicKey
+			util.ExitOnError("failed to generate private key", err)
+		default:
+			fmt.Printf("unsupported key type: %q\n", opt.algorithm)
+			return
 		}
-	default:
-		fmt.Printf("unsupported kty: %q\n", opt.kty)
-		return
+
+		if opt.kidFormat == "date:sequence" {
+			kid = dateSep + strconv.Itoa(i)
+		} else if opt.kidFormat == "provided" {
+			kid = opt.kids[i]
+		}
+
+		privateJWK, err := sjwk.New(key)
+		util.ExitOnError("failed to create JWK", err)
+
+		privateJWK.Set("use", "sig")
+		privateJWK.Set("alg", opt.algorithm)
+		privateJWK.Set("kty", kty)
+
+		if opt.kidFormat != "" {
+			privateJWK.Set("kid", kid)
+		}
+		privateSet.Keys = append(privateSet.Keys, privateJWK)
+
+		publicJWK, err := sjwk.New(publickey)
+		util.ExitOnError("failed to create public JWK", err)
+
+		publicJWK.Set("use", "sig")
+		publicJWK.Set("alg", opt.algorithm)
+		publicJWK.Set("kty", kty)
+
+		if opt.kidFormat != "" {
+			publicJWK.Set("kid", kid)
+		}
+		publicSet.Keys = append(publicSet.Keys, publicJWK)
 	}
 
 	if opt.privateOutput == "" {
@@ -109,8 +129,8 @@ func generateRun(cmd *cobra.Command, args []string) {
 
 func init() {
 	generate.Flags().IntVarP(&opt.n, "jwks", "n", 1, "# of JWK to generate in set")
-	generate.Flags().StringVarP(&opt.kty, "kty", "t", "RSA", "kty (RSA)")
-	generate.Flags().StringVarP(&opt.signing, "sign", "s", "RS256", "signing method [RS256|RS384|RS512]")
+	generate.Flags().StringVarP(&opt.algorithm, "alg", "a", "RS256", "algorithm [RS|PS|ES|HS][256|RS384|RS512]")
+	generate.Flags().IntVarP(&opt.keyLength, "klength", "", 2048, "RSA key length")
 	generate.Flags().StringVarP(&opt.kidFormat, "kidf", "k", "date:sequence", "kid format [date:sequence|provided]")
 	generate.Flags().StringSliceVar(&opt.kids, "kids", nil, "kids (put at least n)")
 	generate.Flags().StringVarP(&opt.publicOutput, "public-output", "o", "", "public keys output file")
