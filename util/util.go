@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
@@ -105,7 +106,7 @@ func LoadPublicKey(data []byte) interface{} {
 	input := data
 
 	// Is it a jwk?
-	set, err0 := sjwk.Parse(input)
+	set, err0 := sjwk.Parse(bytes.NewReader(input))
 	if err0 == nil {
 		return set
 	}
@@ -143,7 +144,7 @@ func LoadPrivateKey(data []byte) (interface{}, bool) {
 	input := data
 
 	// Is it a jwk?
-	set, err0 := sjwk.Parse(input)
+	set, err0 := sjwk.Parse(bytes.NewReader(input))
 	if err0 == nil {
 		return set, true
 	}
