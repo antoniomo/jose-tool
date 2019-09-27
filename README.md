@@ -12,10 +12,7 @@ there's issues or suggestions I can add functionality or polish the interface
 ## Installation
 
 ```
-go get -d github.com/antoniomo/jose-tool
-cd $GOPATH/src/github.com/antoniomo/jose-tool
-dep ensure -vendor-only
-go install
+go get -u github.com/antoniomo/jose-tool
 ```
 
 ## Other similar tools
